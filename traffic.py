@@ -1,4 +1,4 @@
-import cv2
+import cv2 as cv
 import numpy as np
 import os
 import sys
@@ -22,26 +22,26 @@ def main():
     # Get image arrays and labels for all image files
     images, labels = load_data(sys.argv[1])
 
-    # Split data into training and testing sets
-    labels = tf.keras.utils.to_categorical(labels)
-    x_train, x_test, y_train, y_test = train_test_split(
-        np.array(images), np.array(labels), test_size=TEST_SIZE
-    )
+    # # Split data into training and testing sets
+    # labels = tf.keras.utils.to_categorical(labels)
+    # x_train, x_test, y_train, y_test = train_test_split(
+    #     np.array(images), np.array(labels), test_size=TEST_SIZE
+    # )
 
-    # Get a compiled neural network
-    model = get_model()
+    # # Get a compiled neural network
+    # model = get_model()
 
-    # Fit model on training data
-    model.fit(x_train, y_train, epochs=EPOCHS)
+    # # Fit model on training data
+    # model.fit(x_train, y_train, epochs=EPOCHS)
 
-    # Evaluate neural network performance
-    model.evaluate(x_test,  y_test, verbose=2)
+    # # Evaluate neural network performance
+    # model.evaluate(x_test,  y_test, verbose=2)
 
-    # Save model to file
-    if len(sys.argv) == 3:
-        filename = sys.argv[2]
-        model.save(filename)
-        print(f"Model saved to {filename}.")
+    # # Save model to file
+    # if len(sys.argv) == 3:
+    #     filename = sys.argv[2]
+    #     model.save(filename)
+    #     print(f"Model saved to {filename}.")
 
 
 def load_data(data_dir):
@@ -58,7 +58,43 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+
+    images = []
+    labels = []
+
+    for label in os.listdir(data_dir):
+        labels.append(int(label))
+
+        # path to nth label
+        path = change_path(os.path.join(data_dir, label))
+
+        for file in os.listdir(path):
+            # path to the images
+            img_path = change_path(os.path.join(data_dir, label, file))
+
+            # read image
+            image = cv.imread(f'{img_path}', -1)
+
+            # if height or width not equal to 30 then resize
+            height, width = image.shape[:2]
+            if not height == IMG_HEIGHT or not width == IMG_WIDTH:
+
+                # resize the image to IMG_HEIGHT, IMG_WIDTH
+                image = cv.resize(image, (IMG_HEIGHT, IMG_WIDTH),
+                                  interpolation=cv.INTER_AREA)
+
+            # save image in images array
+            images.append(image)
+
+    # return tuple of images and labels
+    return (images, labels)
+
+
+def change_path(path):
+    if sys.platform == "win32":
+        return path
+    else:
+        return path.replace('\\', "/")
 
 
 def get_model():
